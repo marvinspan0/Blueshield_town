@@ -1,638 +1,885 @@
-<!DOCTYPE html>
-<html lang="fr">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Blueshield Town – Jeu rétro en ligne</title>
-  <style>
-    :root {
-      --bg: #0f172a; /* slate-900 */
-      --panel: #111827; /* gray-900 */
-      --panel-2: #1f2937; /* gray-800 */
-      --accent: #38bdf8; /* sky-400 */
-      --accent-2: #22d3ee; /* cyan-400 */
-      --text: #e5e7eb; /* gray-200 */
-      --muted: #9ca3af; /* gray-400 */
-      --danger: #ef4444;
-      --ok: #22c55e;
-    }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0; background: radial-gradient(1200px 800px at 50% -20%, #1e293b, var(--bg));
-      color: var(--text); font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      display: grid; place-items: center; overflow: hidden;
-    }
-    .game-shell {
-      position: relative; width: 320px; height: 240px; /* base internal resolution */
-      transform-origin: top left; image-rendering: pixelated; image-rendering: crisp-edges;
-      box-shadow: 0 20px 60px rgba(0,0,0,.45), 0 2px 12px rgba(0,0,0,.6);
-      border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.08);
-      background: #000;
-    }
-    canvas { display: block; width: 320px; height: 240px; }
-    .hud { position: absolute; inset: 0; pointer-events: none; }
-    .topbar { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; gap: 6px; justify-content: space-between; pointer-events: auto; }
-    .badge { background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1); padding: 4px 8px; border-radius: 999px; font-size: 10px; letter-spacing: .3px; }
-    .btn { pointer-events: auto; appearance: none; border: 1px solid rgba(255,255,255,.12); background: linear-gradient(#0b1220,#0a1629); color: var(--text);
-      padding: 6px 10px; font-size: 12px; border-radius: 10px; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
-    }
-    .btn:hover { border-color: rgba(255,255,255,.24); }
-    .btn:active { transform: translateY(1px); }
-    .overlay { position: absolute; inset: 0; background: rgba(2,6,23,.78); display: grid; place-items: center; backdrop-filter: blur(4px); }
-    .hidden { display: none !important; }
-    .panel { width: min(560px, 92vw); background: linear-gradient(#0b1220,#0a1222); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
-      font-size: 14px;
-    }
-    .panel h2 { margin: 0 0 12px; font-size: 18px; }
-    .panel .grid { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
-    .panel label { font-size: 12px; color: var(--muted); display:block; margin-bottom: 6px; }
-    .panel input[type="text"], .panel input[type="number"], .panel select {
-      width: 100%; background: #0b1220; color: var(--text); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 8px 10px;
-    }
-    .colors { display: flex; gap: 8px; flex-wrap: wrap; }
-    .swatch { width: 28px; height: 28px; border-radius: 7px; border: 2px solid rgba(255,255,255,.12); cursor: pointer; }
-    .swatch.active { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .row { display: flex; gap: 10px; align-items: center; }
-    .row.spread { justify-content: space-between; }
-    .muted { color: var(--muted); font-size: 12px; }
-    .dialog { width: min(560px, 92vw); background: #0b1220; border: 2px solid #1f2937; border-radius: 12px; padding: 12px 14px; line-height: 1.5; }
-    .shop { display: grid; gap: 10px; }
-    .price { font-weight: 700; }
-
-    /* Touch controls */
-    .touch { position: absolute; inset: 0; pointer-events: none; }
-    .dpad { pointer-events: auto; position: absolute; left: 10px; bottom: 10px; width: 120px; height: 120px; opacity: .85; }
-    .dpad button { position: absolute; width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,.2); background: rgba(15,23,42,.8); color: #fff; }
-    .dpad .up { left: 42px; top: 0; }
-    .dpad .down { left: 42px; bottom: 0; }
-    .dpad .left { left: 0; top: 42px; }
-    .dpad .right { right: 0; top: 42px; }
-    .ab { pointer-events: auto; position: absolute; right: 12px; bottom: 18px; display: grid; gap: 12px; }
-    .ab button { width: 56px; height: 56px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(15,23,42,.8); color: #fff; font-weight: 700; }
-
-    /* Helper tip */
-    .help { position: absolute; bottom: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; font-size: 10px; color: var(--muted);
-      background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); padding: 4px 6px; border-radius: 8px; }
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
   </style>
 </head>
 <body>
-  <div id="container" class="game-shell">
-    <canvas id="game" width="320" height="240" aria-label="Jeu Blueshield Town"></canvas>
-
-    <div class="hud">
-      <div class="topbar">
-        <div class="badge" id="playerBadge">—</div>
-        <div class="row" style="gap:6px">
-          <button id="btnInteract" class="btn" title="Entrer / Parler (Entrée)">Interagir ⏎</button>
-          <button id="btnMenu" class="btn" title="Menu (Échap)">Menu</button>
-        </div>
-      </div>
-      <div class="help"> <span>ZQSD / Flèches pour bouger • Entrée pour parler/entrer • Échap pour le menu</span> <span>Version démo locale</span></div>
-    </div>
-
-    <!-- Création du personnage -->
-    <div id="signup" class="overlay hidden" role="dialog" aria-modal="true">
-      <div class="panel">
-        <h2>Création du personnage</h2>
-        <div class="grid">
-          <div>
-            <label for="name">Nom du personnage</label>
-            <input id="name" type="text" maxlength="16" placeholder="ex: Alex" />
-          </div>
-          <div>
-            <label>Couleur d'habits</label>
-            <div id="colorChoices" class="colors"></div>
-          </div>
-        </div>
-        <div class="row spread" style="margin-top:10px">
-          <div class="muted">Vos paramètres sont stockés localement (navigateur).</div>
-          <button id="create" class="btn">Entrer dans la ville</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Dialogues PNJ -->
-    <div id="dialog" class="overlay hidden">
-      <div class="dialog" id="dialogText">…</div>
-    </div>
-
-    <!-- Boutique -->
-    <div id="shop" class="overlay hidden" role="dialog" aria-modal="true">
-      <div class="panel shop">
-        <h2>Blueshield Center – Boutique</h2>
-        <div class="muted">Protégez vos cartes avec nos boîtes Blueshield.</div>
-        <div class="grid">
-          <div>
-            <label>Produit</label>
-            <div><strong>Boîte de protection pour cartes « Blueshield »</strong><br><span class="muted">Plastique rigide, sans acide, format standard TCG.</span></div>
-          </div>
-          <div>
-            <label>Quantité</label>
-            <input id="qty" type="number" min="1" step="1" value="1" />
-          </div>
-        </div>
-        <div class="row spread">
-          <div>Prix unitaire : <span id="unitPrice" class="price">—</span> • Total : <span id="totalPrice" class="price">—</span></div>
-          <div class="row">
-            <button id="buy" class="btn">Acheter</button>
-            <button id="closeShop" class="btn">Fermer</button>
-          </div>
-        </div>
-        <div class="muted">Le paiement ouvre votre lien de paiement (Stripe/Paypal). À configurer dans le code → <code>CHECKOUT_URL</code>.</div>
-      </div>
-    </div>
-
-    <!-- Menu -->
-    <div id="menu" class="overlay hidden" role="dialog" aria-modal="true">
-      <div class="panel">
-        <h2>Menu</h2>
-        <div class="grid">
-          <div>
-            <label>Nom</label>
-            <input id="optName" type="text" maxlength="16" />
-          </div>
-          <div>
-            <label>Couleur d'habits</label>
-            <div id="optColors" class="colors"></div>
-          </div>
-        </div>
-        <div class="row" style="margin-top:12px">
-          <button id="saveOpts" class="btn">Enregistrer</button>
-          <button id="exportSave" class="btn">Exporter la sauvegarde</button>
-          <label class="btn" for="importFile" style="cursor:pointer">Importer</label>
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
-          <button id="reset" class="btn" style="margin-left:auto;color:#fff;border-color:rgba(255,255,255,.2);background:#3f1d1d">RAZ</button>
-          <button id="closeMenu" class="btn">Fermer</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Touch controls -->
-    <div id="touch" class="touch hidden">
-      <div class="dpad">
-        <button class="up">▲</button>
-        <button class="down">▼</button>
-        <button class="left">◀</button>
-        <button class="right">▶</button>
-      </div>
-      <div class="ab">
-        <button class="a" title="Interagir">A</button>
-        <button class="m" title="Menu">≡</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // =============================
-    // CONFIG À PERSONNALISER
-    // =============================
-    const PRICE_EUR = 9.99; // Prix TTC unitaire
-    const CURRENCY = '€';
-    const CHECKOUT_URL = '';
-    // Exemple Stripe Checkout (remplacez par le vôtre):
-    // const CHECKOUT_URL = 'https://checkout.stripe.com/c/pay/cs_test_XXX?client_reference_id=';
-    // Si vide, un e-mail se lancera (mailto) en guise de fallback.
-    const CONTACT_EMAIL = 'contact@votresite.com';
-
-    // =============================
-    // MOTEUR – CANVAS + UTILS
-    // =============================
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const shell = document.getElementById('container');
-
-    const TILE = 16;
-    const W = canvas.width, H = canvas.height; // 320x240
-
-    function fit() {
-      // Mise à l'échelle pixel-perfect (entier) si possible
-      const scaleX = window.innerWidth / W;
-      const scaleY = window.innerHeight / H;
-      let scale = Math.floor(Math.min(scaleX, scaleY));
-      if (scale < 1) scale = Math.min(scaleX, scaleY); // autorise fractionnel si écran trop petit
-      shell.style.transform = `scale(${scale}) translateZ(0)`;
-    }
-    window.addEventListener('resize', fit); fit();
-
-    // Mini RNG pour variations
-    const rand = (a,b)=>Math.random()*(b-a)+a;
-
-    // =============================
-    // ENREGISTREMENT LOCAL
-    // =============================
-    const SAVE_KEY = 'blueshield_save_v1';
-    function loadSave(){ try { return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); } catch(e){ return null; } }
-    function saveSave(data){ localStorage.setItem(SAVE_KEY, JSON.stringify(data)); }
-
-    // =============================
-    // ÉTAT GLOBAL
-    // =============================
-    const state = {
-      map: 'overworld',
-      player: { x: 10*TILE, y: 8*TILE, spd: 1.2, dir: 'down', color: '#4ade80', name: 'Héro·ïne' },
-      dialog: null,
-      inputs: { up:false,down:false,left:false,right:false,action:false,menu:false },
-    };
-
-    // =============================
-    // PALETTE & TILES
-    // =============================
-    const PAL = {
-      grass: '#2a9d8f', path: '#c2b280', treeDk: '#2d6a4f', treeLt: '#40916c', roof: '#ef4444', wall: '#cbd5e1', shadow: '#0b1220',
-      water: '#38bdf8', door: '#f59e0b', center: '#f43f5e', panel: '#1f2937'
-    };
-
-    // Codes tuiles
-    const T = {
-      GRASS:0, PATH:1, WALL:2, ROOF:3, DOOR:4, TREE:5, WATER:6, SIGN:7
-    };
-
-    // Cartes (générées par code pour lisibilité)
-    function makeOverworld(){
-      const w=20,h=15; const a=new Array(w*h).fill(T.GRASS);
-      const idx=(x,y)=>y*w+x;
-      // Chemins
-      for(let x=0;x<w;x++) a[idx(x,9)]=T.PATH; // horizontal
-      for(let y=0;y<h;y++) a[idx(10,y)]=T.PATH; // vertical
-      // Arbres autour
-      for(let x=0;x<w;x++){ a[idx(x,0)]=T.TREE; a[idx(x,h-1)]=T.TREE; }
-      for(let y=0;y<h;y++){ a[idx(0,y)]=T.TREE; a[idx(w-1,y)]=T.TREE; }
-      // Étang
-      for(let y=2;y<5;y++) for(let x=2;x<6;x++) a[idx(x,y)]=T.WATER;
-      // Maisons décor (non interactives)
-      placeHouse(a,w,3,8);
-      placeHouse(a,w,15,5);
-      // Blueshield Center (interactif)
-      placeCenter(a,w,11,6);
-      return {w,h,tiles:a, door:{x:12,y:8}, solids:[T.WALL,T.ROOF,T.TREE, T.WATER, T.SIGN] };
-    }
-
-    function makeCenter(){
-      const w=16,h=12; const a=new Array(w*h).fill(T.GRASS);
-      const idx=(x,y)=>y*w+x;
-      // Sol intérieur sombre
-      for(let y=0;y<h;y++) for(let x=0;x<w;x++) a[idx(x,y)]=T.PATH;
-      // Murs
-      for(let x=0;x<w;x++){ a[idx(x,0)]=T.WALL; a[idx(x,h-1)]=T.WALL; }
-      for(let y=0;y<h;y++){ a[idx(0,y)]=T.WALL; a[idx(w-1,y)]=T.WALL; }
-      // Comptoir
-      for(let x=3;x<=12;x++) a[idx(x,4)]=T.WALL;
-      // Panneau
-      a[idx(8,2)] = T.SIGN;
-      // Porte de sortie
-      a[idx(8,h-1)] = T.DOOR;
-      return {w,h,tiles:a, door:{x:8,y:h-1}, solids:[T.WALL, T.SIGN] };
-    }
-
-    function placeHouse(a,w,ox,oy){
-      // 3x3 maison (toit + mur + porte)
-      a[(oy-2)*w+(ox-1)] = T.ROOF; a[(oy-2)*w+ox] = T.ROOF; a[(oy-2)*w+(ox+1)] = T.ROOF;
-      a[(oy-1)*w+(ox-1)] = T.WALL; a[(oy-1)*w+ox] = T.WALL; a[(oy-1)*w+(ox+1)] = T.WALL;
-      a[(oy)*w+(ox-1)] = T.WALL; a[(oy)*w+ox] = T.DOOR; a[(oy)*w+(ox+1)] = T.WALL;
-    }
-    function placeCenter(a,w,ox,oy){
-      // Petit bâtiment 5x4
-      for(let x=-2;x<=2;x++) a[(oy-3)*w+(ox+x)] = T.ROOF;
-      for(let x=-2;x<=2;x++) a[(oy-2)*w+(ox+x)] = T.ROOF;
-      for(let x=-2;x<=2;x++) a[(oy-1)*w+(ox+x)] = T.WALL;
-      a[(oy)*w+(ox-2)] = T.WALL; a[(oy)*w+(ox-1)] = T.WALL; a[(oy)*w+(ox)] = T.DOOR; a[(oy)*w+(ox+1)] = T.WALL; a[(oy)*w+(ox+2)] = T.WALL;
-      // Panneau devant
-      a[(oy+1)*w+(ox-1)] = T.SIGN;
-    }
-
-    const MAPS = {
-      overworld: makeOverworld(),
-      center: makeCenter()
-    };
-
-    // PNJ
-    const npcs = {
-      overworld: [
-        { x: 6*TILE, y: 9*TILE, talk:["Belle journée à Blueshield Town !","Le centre est par là →"], w:16, h:16 },
-        { x: 13*TILE, y: 10*TILE, talk:["Regarde le panneau devant le Center.","On y vend des boîtes de protection !"], w:16, h:16 },
-      ],
-      center: [
-        { x: 8*TILE, y: 3*TILE, talk:["Bienvenue au Blueshield Center !","Souhaitez-vous acheter des boîtes de protection ?","Appuyez sur Entrée pour ouvrir la boutique."], isShop:true, w:16, h:16 }
-      ]
-    };
-
-    // =============================
-    // RENDU DES TUILES
-    // =============================
-    function drawTile(x,y,t){
-      const px=x*TILE, py=y*TILE;
-      switch(t){
-        case T.GRASS:
-          ctx.fillStyle = PAL.grass; ctx.fillRect(px,py,TILE,TILE);
-          ctx.fillStyle = 'rgba(0,0,0,.05)'; ctx.fillRect(px+4,py+4,2,2); // texture légère
-          break;
-        case T.PATH:
-          ctx.fillStyle = PAL.path; ctx.fillRect(px,py,TILE,TILE);
-          ctx.fillStyle = 'rgba(0,0,0,.07)'; ctx.fillRect(px+3,py+6,10,2);
-          break;
-        case T.WALL:
-          ctx.fillStyle = PAL.wall; ctx.fillRect(px,py,TILE,TILE);
-          ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.fillRect(px,py+TILE-4,TILE,4);
-          break;
-        case T.ROOF:
-          ctx.fillStyle = PAL.roof; ctx.fillRect(px,py,TILE,TILE);
-          ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(px,py, TILE, 3);
-          break;
-        case T.DOOR:
-          ctx.fillStyle = PAL.door; ctx.fillRect(px,py,TILE,TILE);
-          ctx.fillStyle = '#3f2d0c'; ctx.fillRect(px+6,py+8,4,8);
-          break;
-        case T.TREE:
-          ctx.fillStyle = PAL.treeDk; ctx.fillRect(px,py,TILE,TILE);
-          ctx.fillStyle = PAL.treeLt; ctx.fillRect(px+3,py+3,10,10);
-          break;
-        case T.WATER:
-          ctx.fillStyle = PAL.water; ctx.fillRect(px,py,TILE,TILE);
-          ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(px+1,py+2,14,3);
-          break;
-        case T.SIGN:
-          ctx.fillStyle = PAL.panel; ctx.fillRect(px+4,py+4,8,8);
-          ctx.fillStyle = '#fff'; ctx.fillRect(px+6,py+6,4,1);
-          break;
-      }
-    }
-
-    function drawMap(m){
-      for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++) drawTile(x,y, m.tiles[y*m.w+x]);
-      if (state.map==='overworld') {
-        // Dessus du Center – croix stylisée
-        const {x,y}=MAPS.overworld.door; // porte
-        ctx.fillStyle = '#f87171'; // rouge clair
-        ctx.fillRect((x-1)*TILE, (y-2)*TILE, TILE*2, 4); // bandeau
-        ctx.fillStyle = '#fff';
-        ctx.fillRect((x-0.5)*TILE, (y-3)*TILE+2, 4, 8);
-        ctx.fillRect((x-1)*TILE, (y-2)*TILE, 8, 4);
-        // Écriteau "Blueshield"
-        ctx.fillStyle = '#0b1220';
-        ctx.fillRect((x-2)*TILE, (y+1)*TILE, TILE*3, 10);
-        ctx.fillStyle = '#fff';
-        ctx.font = '8px monospace';
-        ctx.fillText('BLUESHIELD', (x-1.8)*TILE, (y+1)*TILE+8);
-      }
-    }
-
-    // =============================
-    // JOUEUR & PNJ
-    // =============================
-    function rectsOverlap(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
-
-    function drawPlayer(){
-      const p=state.player;
-      // Ombre
-      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(p.x+8,p.y+14,6,3,0,0,Math.PI*2); ctx.fill();
-      // Corps pixel
-      ctx.fillStyle = p.color; ctx.fillRect(p.x+5, p.y+6, 6, 8);
-      // Tête
-      ctx.fillStyle = '#f5d0a5'; ctx.fillRect(p.x+5, p.y+2, 6, 6);
-      // Yeux
-      ctx.fillStyle = '#111'; ctx.fillRect(p.x+6, p.y+4, 1, 1); ctx.fillRect(p.x+9, p.y+4, 1, 1);
-    }
-
-    function drawNPC(n){
-      ctx.fillStyle = '#111'; ctx.fillRect(n.x+5, n.y+14, 6, 2); // ombre
-      ctx.fillStyle = '#60a5fa'; ctx.fillRect(n.x+4, n.y+7, 8, 8); // torse
-      ctx.fillStyle = '#f5d0a5'; ctx.fillRect(n.x+4, n.y+2, 8, 6); // tête
-    }
-
-    function collideMap(nx,ny){
-      const m = MAPS[state.map];
-      const rect = { x:nx+2, y:ny+8, w:12, h:8 };// hitbox
-      // collisions tuiles solides
-      for(let ty=Math.floor(rect.y/TILE); ty<=Math.floor((rect.y+rect.h-1)/TILE); ty++){
-        for(let tx=Math.floor(rect.x/TILE); tx<=Math.floor((rect.x+rect.w-1)/TILE); tx++){
-          if (tx<0||ty<0||tx>=m.w||ty>=m.h) return true;
-          const t = m.tiles[ty*m.w+tx];
-          if (m.solids.includes(t)) return true;
-        }
-      }
-      return false;
-    }
-
-    function tryEnterOrExit(){
-      const m = MAPS[state.map];
-      const door = m.door; if(!door) return;
-      const px = Math.floor((state.player.x+8)/TILE), py = Math.floor((state.player.y+14)/TILE);
-      if (state.map==='overworld'){
-        if (px===door.x && py===door.y-1){ // devant la porte
-          // Entrer dans le center
-          state.map='center';
-          state.player.x = 8*TILE; state.player.y = (MAPS.center.h-2)*TILE;
-          say(["Vous entrez dans le Blueshield Center."], 1000);
-        }
-      } else if (state.map==='center'){
-        if (px===door.x && py===door.y){ // sur la porte de sortie
-          state.map='overworld';
-          const d=MAPS.overworld.door; state.player.x=(d.x)*TILE; state.player.y=(d.y-1)*TILE;
-          say(["Vous sortez du Center."], 800);
-        }
-      }
-    }
-
-    function talkToNPC(){
-      const list = npcs[state.map]||[];
-      const pRect = { x: state.player.x+2,y:state.player.y+8,w:12,h:8 };
-      for(const n of list){
-        const nRect = { x:n.x,y:n.y,w:n.w,h:n.h };
-        const near = Math.hypot((state.player.x-n.x),(state.player.y-n.y))<20;
-        if (near && rectsOverlap({x:pRect.x-4,y:pRect.y-4,w:pRect.w+8,h:pRect.h+8}, nRect)){
-          if (n.isShop){ openShop(); return; }
-          say(n.talk);
-          return;
-        }
-      }
-      // Si aucun PNJ proche, tenter porte
-      tryEnterOrExit();
-    }
-
-    // =============================
-    // DIALOGUES
-    // =============================
-    const dialogEl = document.getElementById('dialog');
-    const dialogTextEl = document.getElementById('dialogText');
-    function say(lines, autoCloseMs){
-      state.dialog = { lines: Array.isArray(lines)?lines:[String(lines)], i:0 };
-      dialogTextEl.textContent = state.dialog.lines[0];
-      dialogEl.classList.remove('hidden');
-      if (autoCloseMs){ setTimeout(closeDialog, autoCloseMs); }
-    }
-    function nextLine(){ if(!state.dialog) return; state.dialog.i++; if(state.dialog.i>=state.dialog.lines.length){ closeDialog(); } else { dialogTextEl.textContent = state.dialog.lines[state.dialog.i]; } }
-    function closeDialog(){ dialogEl.classList.add('hidden'); state.dialog=null; }
-
-    dialogEl.addEventListener('click', nextLine);
-
-    // =============================
-    // BOUTIQUE
-    // =============================
-    const shopEl = document.getElementById('shop');
-    const unitPriceEl = document.getElementById('unitPrice');
-    const totalPriceEl = document.getElementById('totalPrice');
-    const qtyEl = document.getElementById('qty');
-    unitPriceEl.textContent = PRICE_EUR.toFixed(2) + ' ' + CURRENCY;
-    function updateTotal(){ const q = Math.max(1, parseInt(qtyEl.value||'1',10)); totalPriceEl.textContent = (q*PRICE_EUR).toFixed(2)+' '+CURRENCY; }
-    qtyEl.addEventListener('input', updateTotal); updateTotal();
-
-    function openShop(){ shopEl.classList.remove('hidden'); updateTotal(); }
-    function closeShop(){ shopEl.classList.add('hidden'); }
-    document.getElementById('closeShop').addEventListener('click', closeShop);
-
-    document.getElementById('buy').addEventListener('click', ()=>{
-      const q = Math.max(1, parseInt(qtyEl.value||'1',10));
-      const save = loadSave()||{};
-      const name = encodeURIComponent(save.name||state.player.name||'Client');
-      if (CHECKOUT_URL){
-        // Redirige vers votre page de paiement (ajoutez vos paramètres si besoin)
-        const url = CHECKOUT_URL + q + `&client=${name}`;
-        window.location.href = url;
-      } else {
-        // Fallback mailto
-        const subject = encodeURIComponent(`Commande boîtes Blueshield x${q}`);
-        const body = encodeURIComponent(`Bonjour,\n\nJe souhaite commander ${q} boîte(s) Blueshield.\nNom du personnage: ${save.name||state.player.name}\n\nMerci !`);
-        window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
-      }
-    });
-
-    // =============================
-    // COMMANDES
-    // =============================
-    const keys = new Set();
-    const KEYMAP = { 'ArrowUp':'up','ArrowDown':'down','ArrowLeft':'left','ArrowRight':'right', 'w':'up','z':'up','s':'down','a':'left','q':'left','d':'right','Enter':'action',' ':'action','Escape':'menu' };
-
-    window.addEventListener('keydown', e=>{ const k = KEYMAP[e.key]; if(k){ e.preventDefault(); keys.add(k);} });
-    window.addEventListener('keyup', e=>{ const k = KEYMAP[e.key]; if(k){ e.preventDefault(); keys.delete(k);} });
-
-    document.getElementById('btnInteract').addEventListener('click', ()=>{ keys.add('action'); setTimeout(()=>keys.delete('action'), 50); });
-    document.getElementById('btnMenu').addEventListener('click', ()=>{ openMenu(); });
-
-    // Touch UI
-    const touchEl = document.getElementById('touch');
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints>0;
-    if (isTouch) touchEl.classList.remove('hidden');
-    function bindHold(sel, k){ const b=touchEl.querySelector(sel); if(!b) return; let down=false; b.addEventListener('touchstart', e=>{ e.preventDefault(); down=true; keys.add(k); }); b.addEventListener('touchend', e=>{ e.preventDefault(); down=false; keys.delete(k); }); }
-    bindHold('.up','up'); bindHold('.down','down'); bindHold('.left','left'); bindHold('.right','right');
-    touchEl.querySelector('.a').addEventListener('touchstart', e=>{ e.preventDefault(); keys.add('action'); setTimeout(()=>keys.delete('action'), 80); });
-    touchEl.querySelector('.m').addEventListener('touchstart', e=>{ e.preventDefault(); openMenu(); });
-
-    // =============================
-    // BOUCLE DE JEU
-    // =============================
-    function step(){
-      // Mouvements
-      const p = state.player;
-      if (!state.dialog && shopEl.classList.contains('hidden') && document.getElementById('menu').classList.contains('hidden') && document.getElementById('signup').classList.contains('hidden')){
-        let vx=0, vy=0; if(keys.has('up')) vy-=1; if(keys.has('down')) vy+=1; if(keys.has('left')) vx-=1; if(keys.has('right')) vx+=1;
-        if (vx||vy){ const len=Math.hypot(vx,vy); vx/=len; vy/=len; const nx=p.x+vx*p.spd, ny=p.y+vy*p.spd; if(!collideMap(nx, p.y)) p.x=nx; if(!collideMap(p.x, ny)) p.y=ny; }
-        if (keys.has('action')){ keys.delete('action'); if (state.dialog) nextLine(); else talkToNPC(); }
-      }
-
-      // Rendu
-      ctx.clearRect(0,0,W,H);
-      const m = MAPS[state.map]; drawMap(m);
-      // PNJ
-      for(const n of (npcs[state.map]||[])) drawNPC(n);
-      // Joueur
-      drawPlayer();
-
-      requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-
-    // =============================
-    // INSCRIPTION / MENU / SAUVEGARDE
-    // =============================
-    const signupEl = document.getElementById('signup');
-    const menuEl = document.getElementById('menu');
-    const playerBadge = document.getElementById('playerBadge');
-
-    const COLORS = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a855f7','#14b8a6','#eab308','#f97316','#64748b'];
-
-    function renderColorChoices(root, current){
-      root.innerHTML='';
-      COLORS.forEach(c=>{
-        const b=document.createElement('button'); b.type='button'; b.className='swatch'+(c===current?' active':''); b.style.background=c; b.addEventListener('click',()=>{
-          root.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active')); b.classList.add('active'); root.dataset.value=c; });
-        root.appendChild(b);
-      });
-      root.dataset.value = current || COLORS[0];
-    }
-
-    const colorChoices = document.getElementById('colorChoices');
-    const optColors = document.getElementById('optColors');
-    renderColorChoices(colorChoices, COLORS[0]);
-
-    function openSignup(){
-      signupEl.classList.remove('hidden');
-      document.getElementById('name').focus();
-    }
-
-    function closeSignup(){ signupEl.classList.add('hidden'); }
-
-    function openMenu(){
-      document.getElementById('optName').value = state.player.name;
-      renderColorChoices(optColors, state.player.color);
-      menuEl.classList.remove('hidden');
-    }
-    function closeMenu(){ menuEl.classList.add('hidden'); }
-
-    document.getElementById('create').addEventListener('click', ()=>{
-      const name = (document.getElementById('name').value||'Héro·ïne').trim();
-      const color = colorChoices.dataset.value || COLORS[0];
-      state.player.name = name; state.player.color = color;
-      playerBadge.textContent = name + ' — ' + 'Blueshield Town';
-      saveSave({ name, color, map: state.map, x: state.player.x, y: state.player.y });
-      closeSignup();
-      say([`Bienvenue, ${name}!`, "Explorez la ville et rendez-vous au Blueshield Center."], 1600);
-    });
-
-    document.getElementById('saveOpts').addEventListener('click', ()=>{
-      const name = (document.getElementById('optName').value||'Héro·ïne').trim();
-      const color = optColors.dataset.value || state.player.color;
-      state.player.name = name; state.player.color = color;
-      playerBadge.textContent = name + ' — ' + (state.map==='overworld'?'Blueshield Town':'Center');
-      const s = loadSave()||{}; saveSave({ ...s, name, color, map: state.map, x: state.player.x, y: state.player.y });
-      say('Options enregistrées.', 900);
-      closeMenu();
-    });
-
-    document.getElementById('closeMenu').addEventListener('click', closeMenu);
-
-    document.getElementById('exportSave').addEventListener('click', ()=>{
-      const s = loadSave()||{ name: state.player.name, color: state.player.color, map: state.map, x: state.player.x, y: state.player.y };
-      const blob = new Blob([JSON.stringify(s,null,2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download='blueshield_save.json'; a.click(); URL.revokeObjectURL(url);
-    });
-
-    document.getElementById('importFile').addEventListener('change', (e)=>{
-      const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const s=JSON.parse(r.result); if(s.name) state.player.name=s.name; if(s.color) state.player.color=s.color; if(s.map) state.map=s.map; if(s.x) state.player.x=s.x; if(s.y) state.player.y=s.y; playerBadge.textContent = state.player.name + ' — ' + (state.map==='overworld'?'Blueshield Town':'Center'); saveSave(s); say('Sauvegarde importée.', 1000); } catch(err){ alert('Fichier invalide'); } }; r.readAsText(f);
-    });
-
-    document.getElementById('reset').addEventListener('click', ()=>{
-      if (confirm('Réinitialiser la partie ?')){ localStorage.removeItem(SAVE_KEY); location.reload(); }
-    });
-
-    // Charger sauvegarde ou montrer inscription
-    (function init(){
-      const s = loadSave();
-      if (s && s.name){ state.player.name=s.name; state.player.color=s.color||state.player.color; state.map=s.map||state.map; state.player.x=s.x||state.player.x; state.player.y=s.y||state.player.y; playerBadge.textContent = s.name + ' — ' + (state.map==='overworld'?'Blueshield Town':'Center'); }
-      else { openSignup(); }
-    })();
-
-    // Fermer fenêtres avec Échap
-    window.addEventListener('keydown', (e)=>{
-      if (e.key==='Escape'){
-        if (!menuEl.classList.contains('hidden')) closeMenu();
-        else if (!shopEl.classList.contains('hidden')) closeShop();
-        else if (!dialogEl.classList.contains('hidden')) closeDialog();
-        else openMenu();
-      }
-      if (e.key==='Enter' && !shopEl.classList.contains('hidden')){ /* valider shop via Entrée */ document.getElementById('buy').click(); }
-    });
-  </script>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="fr"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Blueshield Town - Le Jeu&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- On importe une police de caractères pixelisée pour le style rétro --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;display=swap" rel="stylesheet"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>:root {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--bg-color: #0d1117;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--game-border: #4a4a4a;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--ui-bg: #f0f0f0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--ui-border: #1a1a1a;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--ui-text: #1a1a1a;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--ui-shadow: #999;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--accent-blue: #3b82f6;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--accent-red: #ef4444;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>* {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-sizing: border-box;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>html, body {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>overflow: hidden;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--bg-color);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Press Start 2P', cursive;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--ui-text);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Conteneur principal du jeu, qui sera mis à l'échelle */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#game-container {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 480px; /* Résolution interne augmentée pour plus de détails */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 320px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>outline: 2px solid var(--game-border);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>overflow: hidden;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: #000;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transform-origin: center center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>/* Permet de garder les pixels nets lors de l'agrandissement */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>image-rendering: pixelated;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>image-rendering: crisp-edges;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>canvas {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: block;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Superposition pour tous les éléments d'interface */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.hud, .overlay {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>inset: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pointer-events: none;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.overlay {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(0, 0, 0, 0.6);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>place-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pointer-events: auto;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: opacity 0.2s ease-in-out;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.overlay.visible {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 1;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.hidden {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: none !important;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Style des boîtes de dialogue et panneaux */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.panel, .dialog-box {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--ui-bg);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 4px solid var(--ui-border);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 4px 0 var(--ui-shadow);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 90%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>max-width: 440px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--ui-text);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.6;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.panel h2 {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin: 0 0 16px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>text-transform: uppercase;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.form-group {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.form-group label {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: block;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.form-group input, .form-group select {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid var(--ui-border);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 4px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Press Start 2P', cursive;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.color-swatches {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>gap: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>flex-wrap: wrap;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.swatch {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 28px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 28px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 50%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid var(--ui-border);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: transform 0.1s;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.swatch:hover {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transform: scale(1.1);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.swatch.active {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>outline: 3px solid var(--accent-blue);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>outline-offset: 2px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.btn {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>appearance: none;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--accent-blue);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid var(--ui-border);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px 16px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Press Start 2P', cursive;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>text-transform: uppercase;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 2px 0 var(--ui-shadow);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.1s ease-in-out;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.btn:hover {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>filter: brightness(1.1);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.btn:active {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(2px);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: none;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.btn.danger {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--accent-red);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.panel-actions {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: flex-end;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>gap: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Boîte de dialogue en bas de l'écran */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#dialog {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>align-items: flex-end;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dialog-box {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>max-width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-left: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-right: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-bottom: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>#dialog-indicator {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bottom: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>right: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>animation: bounce 0.8s infinite;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>@keyframes bounce {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>0%, 100% { transform: translateY(0); }</p>
+<p class="p1"><span class="Apple-converted-space">            </span>50% { transform: translateY(-5px); }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* HUD (Infos joueur, etc.) */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.top-bar {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>top: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>left: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>right: 8px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: space-between;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pointer-events: auto;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.player-badge {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(0,0,0,0.5);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 6px 10px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 4px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid rgba(255,255,255,0.3);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* Contrôles tactiles pour mobile */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#touch-controls {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>inset: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pointer-events: none;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#touch-controls.visible {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>pointer-events: auto;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dpad {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>left: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bottom: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 120px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 120px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0.7;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dpad button, .action-buttons button {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 40px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 40px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(255, 255, 255, 0.2);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid rgba(255, 255, 255, 0.4);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 50%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: #fff;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dpad .up { top: 0; left: 40px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dpad .down { bottom: 0; left: 40px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dpad .left { top: 40px; left: 0; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.dpad .right { top: 40px; right: 0; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>.action-buttons {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>right: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bottom: 30px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>gap: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.action-buttons button {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 50px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 50px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;div id="game-container"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;canvas id="game-canvas"&gt;&lt;/canvas&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- HUD (Heads-Up Display) --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="hud"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="top-bar"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="player-badge" class="player-badge"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Écran de création de personnage --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="signup-screen" class="overlay"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="panel"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2&gt;Création du Personnage&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label for="player-name"&gt;Nom du personnage&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input id="player-name" type="text" maxlength="12" placeholder="Alex..."&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label&gt;Couleur des habits&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="color-choices" class="color-swatches"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="panel-actions"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button id="create-char-btn" class="btn"&gt;Commencer l'aventure&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Boîte de dialogue --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="dialog" class="overlay"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="dialog-box" class="dialog-box"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;p id="dialog-text"&gt;&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>&lt;span id="dialog-indicator"&gt;▼&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Boutique --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="shop-screen" class="overlay"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="panel"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;h2&gt;Blueshield Center&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p&gt;Protégez vos cartes avec nos boîtes de haute qualité.&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;strong&gt;Produit :&lt;/strong&gt; Boîte de protection "Blueshield"</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="form-group"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;label for="quantity"&gt;Quantité&lt;/label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;input id="quantity" type="number" min="1" value="1"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;strong&gt;Total : &lt;span id="total-price"&gt;&lt;/span&gt;&lt;/strong&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="panel-actions"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button id="close-shop-btn" class="btn danger"&gt;Fermer&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;button id="buy-btn" class="btn"&gt;Acheter&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Contrôles Tactiles --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="touch-controls"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="dpad"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="up"&gt;▲&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="down"&gt;▼&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="left"&gt;◀&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="right"&gt;▶&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="action-buttons"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="action-a"&gt;A&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">// ===================================================================================</p>
+<p class="p1">// CONFIGURATION DU JEU (à personnaliser)</p>
+<p class="p1">// ===================================================================================</p>
+<p class="p1">const CONFIG = {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>PRICE_PER_BOX: 9.99,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>CURRENCY: '€',</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// URL de paiement (ex: Stripe, PayPal). Laisser vide pour utiliser un mailto.</p>
+<p class="p1"><span class="Apple-converted-space">    </span>CHECKOUT_URL: '',<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Email de contact pour le fallback si CHECKOUT_URL est vide.</p>
+<p class="p1"><span class="Apple-converted-space">    </span>CONTACT_EMAIL: 'contact@votresite.com',<span class="Apple-converted-space"> </span></p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">// ===================================================================================</p>
+<p class="p1">// MOTEUR DU JEU</p>
+<p class="p1">// ===================================================================================</p>
+<p class="p1">document.addEventListener('DOMContentLoaded', () =&gt; {</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Initialisation des éléments du DOM ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const gameContainer = document.getElementById('game-container');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const canvas = document.getElementById('game-canvas');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const ctx = canvas.getContext('2d');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const signupScreen = document.getElementById('signup-screen');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const createCharBtn = document.getElementById('create-char-btn');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const playerNameInput = document.getElementById('player-name');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const colorChoicesContainer = document.getElementById('color-choices');</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const dialogOverlay = document.getElementById('dialog');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const dialogTextEl = document.getElementById('dialog-text');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const shopScreen = document.getElementById('shop-screen');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const quantityInput = document.getElementById('quantity');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const totalPriceEl = document.getElementById('total-price');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const buyBtn = document.getElementById('buy-btn');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const closeShopBtn = document.getElementById('close-shop-btn');</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const playerBadge = document.getElementById('player-badge');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const touchControls = document.getElementById('touch-controls');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Constantes du jeu ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const TILE_SIZE = 16;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const GAME_WIDTH = 480;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const GAME_HEIGHT = 320;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>canvas.width = GAME_WIDTH;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>canvas.height = GAME_HEIGHT;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- État global du jeu ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const state = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>player: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>x: 15 * TILE_SIZE,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>y: 12 * TILE_SIZE,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: TILE_SIZE,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: TILE_SIZE,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>speed: 1.5,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>dir: 'down', // 'down', 'up', 'left', 'right'</p>
+<p class="p1"><span class="Apple-converted-space">            </span>isMoving: false,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>animFrame: 0,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: '#3b82f6',</p>
+<p class="p1"><span class="Apple-converted-space">            </span>name: 'Héros'</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>currentMap: 'overworld',</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dialog: null, // { lines: [], currentLine: 0, onComplete: null }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>input: { up: false, down: false, left: false, right: false, action: false },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>uiOpen: false,</p>
+<p class="p1"><span class="Apple-converted-space">        </span>assetsLoaded: false,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Spritesheet ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>// La spritesheet est encodée en Base64 pour tout garder dans un seul fichier.</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const spritesheet = new Image();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>spritesheet.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAABACAYAAADS1n9/AAAFkUlEQVR4nO3dUW7jSACAUf//6d0J2k5KHEhP0A45qVfO0iRJEg8i9vP5/f0FAAD//v39/f379+/fP3/+fP/+/ft/fn5+f39/f39//wAAAP/z8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz8/Pz-QAAACdJREFUeJzt2LENgEAMBEFzC+gCg0IgdAPoAl1aYAIjQvB/53F2cWOL7e29f+B7/z+g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g4A4g-';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>spritesheet.onload = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.assetsLoaded = true;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>init(); // Démarrer le jeu une fois l'image chargée</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>spritesheet.onerror = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>console.error("Erreur de chargement de la spritesheet.");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// On pourrait afficher un message d'erreur à l'utilisateur ici</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// Définition des sprites (x, y, largeur, hauteur sur la spritesheet)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const SPRITES = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>grass: [0, 0, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>path: [16, 0, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>water: [32, 0, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tree: [48, 0, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>roof: [64, 0, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>wall: [80, 0, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>door: [96, 0, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>centerSign: [112, 0, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>centerCross: [0, 16, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>npc1: [16, 16, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>shopkeeper: [32, 16, 16, 16],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>player: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>down: [[0, 32, 16, 16], [16, 32, 16, 16], [0, 32, 16, 16], [32, 32, 16, 16]],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>up: [[0, 48, 16, 16], [16, 48, 16, 16], [0, 48, 16, 16], [32, 48, 16, 16]],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>left: [[48, 32, 16, 16], [64, 32, 16, 16], [48, 32, 16, 16], [80, 32, 16, 16]],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>right: [[48, 48, 16, 16], [64, 48, 16, 16], [48, 48, 16, 16], [80, 48, 16, 16]],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const TILE_CODES = { GRASS: 0, PATH: 1, WATER: 2, TREE: 3, ROOF: 4, WALL: 5, DOOR: 6, CENTERSIGN: 7, CENTERWALL: 8 };</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Définition des cartes ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const MAPS = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>overworld: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>tiles: [</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,2,2,2,0,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,2,2,2,0,0,0,0,0,8,8,8,8,8,0,0,4,4,4,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,8,6,8,8,8,0,0,5,5,5,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,8,7,8,8,8,0,0,5,5,5,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,4,4,4,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,5,5,5,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,5,5,5,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 30,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 20,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>solids: [TILE_CODES.TREE, TILE_CODES.WATER, TILE_CODES.WALL, TILE_CODES.ROOF, TILE_CODES.CENTERWALL, TILE_CODES.CENTERSIGN],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>interactions: {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>'11,4': { type: 'portal', targetMap: 'center', targetX: 8, targetY: 10 },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>},</p>
+<p class="p1"><span class="Apple-converted-space">        </span>center: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>tiles: [</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,5,5,5,5,5,5,5,5,5,5,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,1,1,1,1,1,1,6,1,1,1,1,1,1,1,8,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 16,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 12,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>solids: [TILE_CODES.WALL, TILE_CODES.CENTERWALL],</p>
+<p class="p1"><span class="Apple-converted-space">            </span>interactions: {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>'8,11': { type: 'portal', targetMap: 'overworld', targetX: 11, targetY: 5 },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const NPCS = {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>overworld: [</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ x: 5 * TILE_SIZE, y: 11 * TILE_SIZE, sprite: SPRITES.npc1, dialog: ["Bienvenue à Blueshield Town!", "Le grand bâtiment rouge est le Center.", "Vous devriez y faire un tour."] },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>],</p>
+<p class="p1"><span class="Apple-converted-space">        </span>center: [</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ x: 8 * TILE_SIZE, y: 4 * TILE_SIZE, sprite: SPRITES.shopkeeper, dialog: ["Bonjour! Bienvenue au Blueshield Center.", "Puis-je vous proposer nos fameuses boîtes de protection ?"], action: 'openShop' },</p>
+<p class="p1"><span class="Apple-converted-space">        </span>]</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Fonctions utilitaires ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const fitToScreen = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const scaleX = window.innerWidth / GAME_WIDTH;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const scaleY = window.innerHeight / GAME_HEIGHT;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const scale = Math.min(scaleX, scaleY);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>gameContainer.style.transform = `scale(${scale})`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const isTouchDevice = () =&gt; 'ontouchstart' in window || navigator.maxTouchPoints &gt; 0;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Fonctions de rendu ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const drawSprite = (sprite, dx, dy) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (!sprite) return;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ctx.drawImage(spritesheet, sprite[0], sprite[1], sprite[2], sprite[3], dx, dy, sprite[2], sprite[3]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const drawMap = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const map = MAPS[state.currentMap];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>for (let y = 0; y &lt; map.height; y++) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>for (let x = 0; x &lt; map.width; x++) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const tileIndex = y * map.width + x;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const tileType = map.tiles[tileIndex];</p>
+<p class="p1"><span class="Apple-converted-space">                </span>let sprite;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>switch(tileType) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.GRASS: sprite = SPRITES.grass; break;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.PATH: sprite = SPRITES.path; break;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.WATER: sprite = SPRITES.water; break;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.TREE: sprite = SPRITES.tree; break;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.ROOF: sprite = SPRITES.roof; break;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.WALL: sprite = SPRITES.wall; break;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.DOOR: sprite = SPRITES.door; break;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.CENTERSIGN: sprite = SPRITES.centerSign; break;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>case TILE_CODES.CENTERWALL: sprite = SPRITES.wall; break; // Utilise le même mur pour l'instant</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>drawSprite(sprite, x * TILE_SIZE, y * TILE_SIZE);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>// Dessin de la croix du center par dessus</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (state.currentMap === 'overworld' &amp;&amp; x === 11 &amp;&amp; y === 3) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>drawSprite(SPRITES.centerCross, x * TILE_SIZE, y * TILE_SIZE);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const drawPlayer = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const p = state.player;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let frame = 0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (p.isMoving) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>frame = Math.floor(p.animFrame / 8) % 4;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const sprite = SPRITES.player[p.dir][frame];</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// On crée un canvas temporaire pour recolorer le sprite du joueur</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const tempCanvas = document.createElement('canvas');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const tempCtx = tempCanvas.getContext('2d');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tempCanvas.width = 16;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tempCanvas.height = 16;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Dessine le sprite original</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tempCtx.drawImage(spritesheet, sprite[0], sprite[1], 16, 16, 0, 0, 16, 16);</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Applique la couleur</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tempCtx.globalCompositeOperation = 'source-atop';</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tempCtx.fillStyle = p.color;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>tempCtx.fillRect(0, 0, 16, 16);</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Dessine le résultat sur le canvas principal</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ctx.drawImage(tempCanvas, p.x, p.y);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const drawNPCs = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const currentNpcs = NPCS[state.currentMap] || [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>currentNpcs.forEach(npc =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>drawSprite(npc.sprite, npc.x, npc.y);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Fonctions de mise à jour (logique) ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const updatePlayer = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const p = state.player;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>p.isMoving = false;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (state.uiOpen) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let dx = 0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let dy = 0;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (state.input.up) { p.dir = 'up'; dy = -p.speed; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>else if (state.input.down) { p.dir = 'down'; dy = p.speed; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>else if (state.input.left) { p.dir = 'left'; dx = -p.speed; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>else if (state.input.right) { p.dir = 'right'; dx = p.speed; }</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (dx !== 0 || dy !== 0) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>p.isMoving = true;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>p.animFrame++;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const nextX = p.x + dx;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const nextY = p.y + dy;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (!checkCollision(nextX, nextY)) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>p.x = nextX;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>p.y = nextY;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>p.animFrame = 0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const checkCollision = (x, y) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const map = MAPS[state.currentMap];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const hitbox = { x: x + 4, y: y + 8, width: 8, height: 8 };</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const leftTile = Math.floor(hitbox.x / TILE_SIZE);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const rightTile = Math.floor((hitbox.x + hitbox.width) / TILE_SIZE);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const topTile = Math.floor(hitbox.y / TILE_SIZE);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const bottomTile = Math.floor((hitbox.y + hitbox.height) / TILE_SIZE);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>for (let ty = topTile; ty &lt;= bottomTile; ty++) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>for (let tx = leftTile; tx &lt;= rightTile; tx++) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (tx &lt; 0 || ty &lt; 0 || tx &gt;= map.width || ty &gt;= map.height) return true;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const tileIndex = ty * map.width + tx;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const tileType = map.tiles[tileIndex];</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (map.solids.includes(tileType)) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return true;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return false;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const handleInteraction = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (state.uiOpen) return;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const p = state.player;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let targetX = p.x;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>let targetY = p.y;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>switch(p.dir) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>case 'up': targetY -= TILE_SIZE / 2; break;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>case 'down': targetY += TILE_SIZE; break;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>case 'left': targetX -= TILE_SIZE / 2; break;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>case 'right': targetX += TILE_SIZE; break;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const targetTileX = Math.floor(targetX / TILE_SIZE);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const targetTileY = Math.floor(targetY / TILE_SIZE);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const key = `${targetTileX},${targetTileY}`;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Interaction avec la map (portes, etc.)</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const mapInteraction = MAPS[state.currentMap].interactions[key];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (mapInteraction) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (mapInteraction.type === 'portal') {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>state.currentMap = mapInteraction.targetMap;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>state.player.x = mapInteraction.targetX * TILE_SIZE;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>state.player.y = mapInteraction.targetY * TILE_SIZE;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Interaction avec les PNJ</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const currentNpcs = NPCS[state.currentMap] || [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>for (const npc of currentNpcs) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const dist = Math.hypot(p.x - npc.x, p.y - npc.y);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (dist &lt; TILE_SIZE * 1.5) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (npc.action === 'openShop') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>openShop();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>showDialog(npc.dialog);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Fonctions UI ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const showDialog = (lines, onComplete) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.dialog = { lines, currentLine: 0, onComplete };</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dialogTextEl.textContent = lines[0];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dialogOverlay.classList.add('visible');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.uiOpen = true;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const nextDialogLine = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (!state.dialog) return;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.dialog.currentLine++;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (state.dialog.currentLine &gt;= state.dialog.lines.length) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>closeDialog();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>dialogTextEl.textContent = state.dialog.lines[state.dialog.currentLine];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const closeDialog = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (state.dialog &amp;&amp; state.dialog.onComplete) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>state.dialog.onComplete();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>dialogOverlay.classList.remove('visible');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.dialog = null;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.uiOpen = false;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const openShop = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>updateTotalPrice();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>shopScreen.classList.add('visible');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.uiOpen = true;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const closeShop = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>shopScreen.classList.remove('visible');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.uiOpen = false;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const updateTotalPrice = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const quantity = parseInt(quantityInput.value) || 1;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const total = (quantity * CONFIG.PRICE_PER_BOX).toFixed(2);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>totalPriceEl.textContent = `${total} ${CONFIG.CURRENCY}`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Boucle de jeu principale ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let lastTime = 0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const gameLoop = (timestamp) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const deltaTime = timestamp - lastTime;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>lastTime = timestamp;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (state.assetsLoaded) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Logique</p>
+<p class="p1"><span class="Apple-converted-space">            </span>updatePlayer();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// Rendu</p>
+<p class="p1"><span class="Apple-converted-space">            </span>ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>drawMap();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>drawNPCs();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>drawPlayer();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>requestAnimationFrame(gameLoop);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Gestion des entrées (clavier &amp; tactile) ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const keyMap = { 'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right', 'w': 'up', 's': 'down', 'a': 'left', 'd': 'right', 'z': 'up', 'q': 'left' };</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.addEventListener('keydown', (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keyMap[e.key]) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>state.input[keyMap[e.key]] = true;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (e.key === 'Enter' || e.key === ' ') {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (state.dialog) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>nextDialogLine();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>handleInteraction();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>window.addEventListener('keyup', (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (keyMap[e.key]) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>state.input[keyMap[e.key]] = false;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p2"><span class="Apple-converted-space">    </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>// --- Initialisation du jeu ---</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const init = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>fitToScreen();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>window.addEventListener('resize', fitToScreen);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Configuration de l'écran de création</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const PLAYER_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#14b8a6'];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>colorChoicesContainer.innerHTML = PLAYER_COLORS.map(color =&gt;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>`&lt;div class="swatch" style="background-color: ${color}" data-color="${color}"&gt;&lt;/div&gt;`</p>
+<p class="p1"><span class="Apple-converted-space">        </span>).join('');</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const swatches = colorChoicesContainer.querySelectorAll('.swatch');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>swatches.forEach(swatch =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>swatch.addEventListener('click', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>swatches.forEach(s =&gt; s.classList.remove('active'));</p>
+<p class="p1"><span class="Apple-converted-space">                </span>swatch.classList.add('active');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>state.player.color = swatch.dataset.color;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>swatches[0].classList.add('active');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.player.color = swatches[0].dataset.color;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>createCharBtn.addEventListener('click', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const name = playerNameInput.value.trim();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (name) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>state.player.name = name;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>signupScreen.classList.remove('visible');</p>
+<p class="p1"><span class="Apple-converted-space">                </span>state.uiOpen = false;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>playerBadge.textContent = state.player.name;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showDialog([`Bienvenue à Blueshield Town, ${state.player.name}!`]);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>showDialog(["Veuillez entrer un nom."]);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Configuration de la boutique</p>
+<p class="p1"><span class="Apple-converted-space">        </span>quantityInput.addEventListener('input', updateTotalPrice);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>closeShopBtn.addEventListener('click', closeShop);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>buyBtn.addEventListener('click', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const quantity = parseInt(quantityInput.value) || 1;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const name = encodeURIComponent(state.player.name);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (CONFIG.CHECKOUT_URL) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const url = `${CONFIG.CHECKOUT_URL}?quantity=${quantity}&amp;client=${name}`;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>window.open(url, '_blank');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const subject = encodeURIComponent(`Commande de ${quantity} boîtes Blueshield`);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const body = encodeURIComponent(`Bonjour,\n\nJe souhaite commander ${quantity} boîte(s) Blueshield.\n\nPersonnage: ${state.player.name}`);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>window.location.href = `mailto:${CONFIG.CONTACT_EMAIL}?subject=${subject}&amp;body=${body}`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Afficher l'écran de création</p>
+<p class="p1"><span class="Apple-converted-space">        </span>signupScreen.classList.add('visible');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>state.uiOpen = true;</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Gérer les contrôles tactiles</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (isTouchDevice()) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchControls.classList.add('visible');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const bindTouch = (selector, key) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const btn = touchControls.querySelector(selector);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>btn.addEventListener('touchstart', (e) =&gt; { e.preventDefault(); state.input[key] = true; });</p>
+<p class="p1"><span class="Apple-converted-space">                </span>btn.addEventListener('touchend', (e) =&gt; { e.preventDefault(); state.input[key] = false; });</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bindTouch('.up', 'up');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bindTouch('.down', 'down');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bindTouch('.left', 'left');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>bindTouch('.right', 'right');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>touchControls.querySelector('.action-a').addEventListener('touchstart', (e) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>e.preventDefault();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (state.dialog) nextDialogLine();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>else handleInteraction();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Lancer la boucle de jeu</p>
+<p class="p1"><span class="Apple-converted-space">        </span>requestAnimationFrame(gameLoop);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1">});</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
 </body>
 </html>
