@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blueshield Town – Jeu rétro en ligne</title>
+  <style>
+    :root {
+      --bg: #0f172a; /* slate-900 */
+      --panel: #111827; /* gray-900 */
+      --panel-2: #1f2937; /* gray-800 */
+      --accent: #38bdf8; /* sky-400 */
+      --accent-2: #22d3ee; /* cyan-400 */
+      --text: #e5e7eb; /* gray-200 */
+      --muted: #9ca3af; /* gray-400 */
+      --danger: #ef4444;
+      --ok: #22c55e;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: radial-gradient(1200px 800px at 50% -20%, #1e293b, var(--bg));
+      color: var(--text); font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display: grid; place-items: center; overflow: hidden;
+    }
+    .game-shell {
+      position: relative; width: 320px; height: 240px; /* base internal resolution */
+      transform-origin: top left; image-rendering: pixelated; image-rendering: crisp-edges;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45), 0 2px 12px rgba(0,0,0,.6);
+      border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.08);
+      background: #000;
+    }
+    canvas { display: block; width: 320px; height: 240px; }
+    .hud { position: absolute; inset: 0; pointer-events: none; }
+    .topbar { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; gap: 6px; justify-content: space-between; pointer-events: auto; }
+    .badge { background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1); padding: 4px 8px; border-radius: 999px; font-size: 10px; letter-spacing: .3px; }
+    .btn { pointer-events: auto; appearance: none; border: 1px solid rgba(255,255,255,.12); background: linear-gradient(#0b1220,#0a1629); color: var(--text);
+      padding: 6px 10px; font-size: 12px; border-radius: 10px; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .btn:hover { border-color: rgba(255,255,255,.24); }
+    .btn:active { transform: translateY(1px); }
+    .overlay { position: absolute; inset: 0; background: rgba(2,6,23,.78); display: grid; place-items: center; backdrop-filter: blur(4px); }
+    .hidden { display: none !important; }
+    .panel { width: min(560px, 92vw); background: linear-gradient(#0b1220,#0a1222); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      font-size: 14px;
+    }
+    .panel h2 { margin: 0 0 12px; font-size: 18px; }
+    .panel .grid { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+    .panel label { font-size: 12px; color: var(--muted); display:block; margin-bottom: 6px; }
+    .panel input[type="text"], .panel input[type="number"], .panel select {
+      width: 100%; background: #0b1220; color: var(--text); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 8px 10px;
+    }
+    .colors { display: flex; gap: 8px; flex-wrap: wrap; }
+    .swatch { width: 28px; height: 28px; border-radius: 7px; border: 2px solid rgba(255,255,255,.12); cursor: pointer; }
+    .swatch.active { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .row.spread { justify-content: space-between; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .dialog { width: min(560px, 92vw); background: #0b1220; border: 2px solid #1f2937; border-radius: 12px; padding: 12px 14px; line-height: 1.5; }
+    .shop { display: grid; gap: 10px; }
+    .price { font-weight: 700; }
+
+    /* Touch controls */
+    .touch { position: absolute; inset: 0; pointer-events: none; }
+    .dpad { pointer-events: auto; position: absolute; left: 10px; bottom: 10px; width: 120px; height: 120px; opacity: .85; }
+    .dpad button { position: absolute; width: 36px; height: 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,.2); background: rgba(15,23,42,.8); color: #fff; }
+    .dpad .up { left: 42px; top: 0; }
+    .dpad .down { left: 42px; bottom: 0; }
+    .dpad .left { left: 0; top: 42px; }
+    .dpad .right { right: 0; top: 42px; }
+    .ab { pointer-events: auto; position: absolute; right: 12px; bottom: 18px; display: grid; gap: 12px; }
+    .ab button { width: 56px; height: 56px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(15,23,42,.8); color: #fff; font-weight: 700; }
+
+    /* Helper tip */
+    .help { position: absolute; bottom: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; font-size: 10px; color: var(--muted);
+      background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); padding: 4px 6px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div id="container" class="game-shell">
+    <canvas id="game" width="320" height="240" aria-label="Jeu Blueshield Town"></canvas>
+
+    <div class="hud">
+      <div class="topbar">
+        <div class="badge" id="playerBadge">—</div>
+        <div class="row" style="gap:6px">
+          <button id="btnInteract" class="btn" title="Entrer / Parler (Entrée)">Interagir ⏎</button>
+          <button id="btnMenu" class="btn" title="Menu (Échap)">Menu</button>
+        </div>
+      </div>
+      <div class="help"> <span>ZQSD / Flèches pour bouger • Entrée pour parler/entrer • Échap pour le menu</span> <span>Version démo locale</span></div>
+    </div>
+
+    <!-- Création du personnage -->
+    <div id="signup" class="overlay hidden" role="dialog" aria-modal="true">
+      <div class="panel">
+        <h2>Création du personnage</h2>
+        <div class="grid">
+          <div>
+            <label for="name">Nom du personnage</label>
+            <input id="name" type="text" maxlength="16" placeholder="ex: Alex" />
+          </div>
+          <div>
+            <label>Couleur d'habits</label>
+            <div id="colorChoices" class="colors"></div>
+          </div>
+        </div>
+        <div class="row spread" style="margin-top:10px">
+          <div class="muted">Vos paramètres sont stockés localement (navigateur).</div>
+          <button id="create" class="btn">Entrer dans la ville</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dialogues PNJ -->
+    <div id="dialog" class="overlay hidden">
+      <div class="dialog" id="dialogText">…</div>
+    </div>
+
+    <!-- Boutique -->
+    <div id="shop" class="overlay hidden" role="dialog" aria-modal="true">
+      <div class="panel shop">
+        <h2>Blueshield Center – Boutique</h2>
+        <div class="muted">Protégez vos cartes avec nos boîtes Blueshield.</div>
+        <div class="grid">
+          <div>
+            <label>Produit</label>
+            <div><strong>Boîte de protection pour cartes « Blueshield »</strong><br><span class="muted">Plastique rigide, sans acide, format standard TCG.</span></div>
+          </div>
+          <div>
+            <label>Quantité</label>
+            <input id="qty" type="number" min="1" step="1" value="1" />
+          </div>
+        </div>
+        <div class="row spread">
+          <div>Prix unitaire : <span id="unitPrice" class="price">—</span> • Total : <span id="totalPrice" class="price">—</span></div>
+          <div class="row">
+            <button id="buy" class="btn">Acheter</button>
+            <button id="closeShop" class="btn">Fermer</button>
+          </div>
+        </div>
+        <div class="muted">Le paiement ouvre votre lien de paiement (Stripe/Paypal). À configurer dans le code → <code>CHECKOUT_URL</code>.</div>
+      </div>
+    </div>
+
+    <!-- Menu -->
+    <div id="menu" class="overlay hidden" role="dialog" aria-modal="true">
+      <div class="panel">
+        <h2>Menu</h2>
+        <div class="grid">
+          <div>
+            <label>Nom</label>
+            <input id="optName" type="text" maxlength="16" />
+          </div>
+          <div>
+            <label>Couleur d'habits</label>
+            <div id="optColors" class="colors"></div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button id="saveOpts" class="btn">Enregistrer</button>
+          <button id="exportSave" class="btn">Exporter la sauvegarde</button>
+          <label class="btn" for="importFile" style="cursor:pointer">Importer</label>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+          <button id="reset" class="btn" style="margin-left:auto;color:#fff;border-color:rgba(255,255,255,.2);background:#3f1d1d">RAZ</button>
+          <button id="closeMenu" class="btn">Fermer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Touch controls -->
+    <div id="touch" class="touch hidden">
+      <div class="dpad">
+        <button class="up">▲</button>
+        <button class="down">▼</button>
+        <button class="left">◀</button>
+        <button class="right">▶</button>
+      </div>
+      <div class="ab">
+        <button class="a" title="Interagir">A</button>
+        <button class="m" title="Menu">≡</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =============================
+    // CONFIG À PERSONNALISER
+    // =============================
+    const PRICE_EUR = 9.99; // Prix TTC unitaire
+    const CURRENCY = '€';
+    const CHECKOUT_URL = '';
+    // Exemple Stripe Checkout (remplacez par le vôtre):
+    // const CHECKOUT_URL = 'https://checkout.stripe.com/c/pay/cs_test_XXX?client_reference_id=';
+    // Si vide, un e-mail se lancera (mailto) en guise de fallback.
+    const CONTACT_EMAIL = 'contact@votresite.com';
+
+    // =============================
+    // MOTEUR – CANVAS + UTILS
+    // =============================
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const shell = document.getElementById('container');
+
+    const TILE = 16;
+    const W = canvas.width, H = canvas.height; // 320x240
+
+    function fit() {
+      // Mise à l'échelle pixel-perfect (entier) si possible
+      const scaleX = window.innerWidth / W;
+      const scaleY = window.innerHeight / H;
+      let scale = Math.floor(Math.min(scaleX, scaleY));
+      if (scale < 1) scale = Math.min(scaleX, scaleY); // autorise fractionnel si écran trop petit
+      shell.style.transform = `scale(${scale}) translateZ(0)`;
+    }
+    window.addEventListener('resize', fit); fit();
+
+    // Mini RNG pour variations
+    const rand = (a,b)=>Math.random()*(b-a)+a;
+
+    // =============================
+    // ENREGISTREMENT LOCAL
+    // =============================
+    const SAVE_KEY = 'blueshield_save_v1';
+    function loadSave(){ try { return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); } catch(e){ return null; } }
+    function saveSave(data){ localStorage.setItem(SAVE_KEY, JSON.stringify(data)); }
+
+    // =============================
+    // ÉTAT GLOBAL
+    // =============================
+    const state = {
+      map: 'overworld',
+      player: { x: 10*TILE, y: 8*TILE, spd: 1.2, dir: 'down', color: '#4ade80', name: 'Héro·ïne' },
+      dialog: null,
+      inputs: { up:false,down:false,left:false,right:false,action:false,menu:false },
+    };
+
+    // =============================
+    // PALETTE & TILES
+    // =============================
+    const PAL = {
+      grass: '#2a9d8f', path: '#c2b280', treeDk: '#2d6a4f', treeLt: '#40916c', roof: '#ef4444', wall: '#cbd5e1', shadow: '#0b1220',
+      water: '#38bdf8', door: '#f59e0b', center: '#f43f5e', panel: '#1f2937'
+    };
+
+    // Codes tuiles
+    const T = {
+      GRASS:0, PATH:1, WALL:2, ROOF:3, DOOR:4, TREE:5, WATER:6, SIGN:7
+    };
+
+    // Cartes (générées par code pour lisibilité)
+    function makeOverworld(){
+      const w=20,h=15; const a=new Array(w*h).fill(T.GRASS);
+      const idx=(x,y)=>y*w+x;
+      // Chemins
+      for(let x=0;x<w;x++) a[idx(x,9)]=T.PATH; // horizontal
+      for(let y=0;y<h;y++) a[idx(10,y)]=T.PATH; // vertical
+      // Arbres autour
+      for(let x=0;x<w;x++){ a[idx(x,0)]=T.TREE; a[idx(x,h-1)]=T.TREE; }
+      for(let y=0;y<h;y++){ a[idx(0,y)]=T.TREE; a[idx(w-1,y)]=T.TREE; }
+      // Étang
+      for(let y=2;y<5;y++) for(let x=2;x<6;x++) a[idx(x,y)]=T.WATER;
+      // Maisons décor (non interactives)
+      placeHouse(a,w,3,8);
+      placeHouse(a,w,15,5);
+      // Blueshield Center (interactif)
+      placeCenter(a,w,11,6);
+      return {w,h,tiles:a, door:{x:12,y:8}, solids:[T.WALL,T.ROOF,T.TREE, T.WATER, T.SIGN] };
+    }
+
+    function makeCenter(){
+      const w=16,h=12; const a=new Array(w*h).fill(T.GRASS);
+      const idx=(x,y)=>y*w+x;
+      // Sol intérieur sombre
+      for(let y=0;y<h;y++) for(let x=0;x<w;x++) a[idx(x,y)]=T.PATH;
+      // Murs
+      for(let x=0;x<w;x++){ a[idx(x,0)]=T.WALL; a[idx(x,h-1)]=T.WALL; }
+      for(let y=0;y<h;y++){ a[idx(0,y)]=T.WALL; a[idx(w-1,y)]=T.WALL; }
+      // Comptoir
+      for(let x=3;x<=12;x++) a[idx(x,4)]=T.WALL;
+      // Panneau
+      a[idx(8,2)] = T.SIGN;
+      // Porte de sortie
+      a[idx(8,h-1)] = T.DOOR;
+      return {w,h,tiles:a, door:{x:8,y:h-1}, solids:[T.WALL, T.SIGN] };
+    }
+
+    function placeHouse(a,w,ox,oy){
+      // 3x3 maison (toit + mur + porte)
+      a[(oy-2)*w+(ox-1)] = T.ROOF; a[(oy-2)*w+ox] = T.ROOF; a[(oy-2)*w+(ox+1)] = T.ROOF;
+      a[(oy-1)*w+(ox-1)] = T.WALL; a[(oy-1)*w+ox] = T.WALL; a[(oy-1)*w+(ox+1)] = T.WALL;
+      a[(oy)*w+(ox-1)] = T.WALL; a[(oy)*w+ox] = T.DOOR; a[(oy)*w+(ox+1)] = T.WALL;
+    }
+    function placeCenter(a,w,ox,oy){
+      // Petit bâtiment 5x4
+      for(let x=-2;x<=2;x++) a[(oy-3)*w+(ox+x)] = T.ROOF;
+      for(let x=-2;x<=2;x++) a[(oy-2)*w+(ox+x)] = T.ROOF;
+      for(let x=-2;x<=2;x++) a[(oy-1)*w+(ox+x)] = T.WALL;
+      a[(oy)*w+(ox-2)] = T.WALL; a[(oy)*w+(ox-1)] = T.WALL; a[(oy)*w+(ox)] = T.DOOR; a[(oy)*w+(ox+1)] = T.WALL; a[(oy)*w+(ox+2)] = T.WALL;
+      // Panneau devant
+      a[(oy+1)*w+(ox-1)] = T.SIGN;
+    }
+
+    const MAPS = {
+      overworld: makeOverworld(),
+      center: makeCenter()
+    };
+
+    // PNJ
+    const npcs = {
+      overworld: [
+        { x: 6*TILE, y: 9*TILE, talk:["Belle journée à Blueshield Town !","Le centre est par là →"], w:16, h:16 },
+        { x: 13*TILE, y: 10*TILE, talk:["Regarde le panneau devant le Center.","On y vend des boîtes de protection !"], w:16, h:16 },
+      ],
+      center: [
+        { x: 8*TILE, y: 3*TILE, talk:["Bienvenue au Blueshield Center !","Souhaitez-vous acheter des boîtes de protection ?","Appuyez sur Entrée pour ouvrir la boutique."], isShop:true, w:16, h:16 }
+      ]
+    };
+
+    // =============================
+    // RENDU DES TUILES
+    // =============================
+    function drawTile(x,y,t){
+      const px=x*TILE, py=y*TILE;
+      switch(t){
+        case T.GRASS:
+          ctx.fillStyle = PAL.grass; ctx.fillRect(px,py,TILE,TILE);
+          ctx.fillStyle = 'rgba(0,0,0,.05)'; ctx.fillRect(px+4,py+4,2,2); // texture légère
+          break;
+        case T.PATH:
+          ctx.fillStyle = PAL.path; ctx.fillRect(px,py,TILE,TILE);
+          ctx.fillStyle = 'rgba(0,0,0,.07)'; ctx.fillRect(px+3,py+6,10,2);
+          break;
+        case T.WALL:
+          ctx.fillStyle = PAL.wall; ctx.fillRect(px,py,TILE,TILE);
+          ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.fillRect(px,py+TILE-4,TILE,4);
+          break;
+        case T.ROOF:
+          ctx.fillStyle = PAL.roof; ctx.fillRect(px,py,TILE,TILE);
+          ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(px,py, TILE, 3);
+          break;
+        case T.DOOR:
+          ctx.fillStyle = PAL.door; ctx.fillRect(px,py,TILE,TILE);
+          ctx.fillStyle = '#3f2d0c'; ctx.fillRect(px+6,py+8,4,8);
+          break;
+        case T.TREE:
+          ctx.fillStyle = PAL.treeDk; ctx.fillRect(px,py,TILE,TILE);
+          ctx.fillStyle = PAL.treeLt; ctx.fillRect(px+3,py+3,10,10);
+          break;
+        case T.WATER:
+          ctx.fillStyle = PAL.water; ctx.fillRect(px,py,TILE,TILE);
+          ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(px+1,py+2,14,3);
+          break;
+        case T.SIGN:
+          ctx.fillStyle = PAL.panel; ctx.fillRect(px+4,py+4,8,8);
+          ctx.fillStyle = '#fff'; ctx.fillRect(px+6,py+6,4,1);
+          break;
+      }
+    }
+
+    function drawMap(m){
+      for(let y=0;y<m.h;y++) for(let x=0;x<m.w;x++) drawTile(x,y, m.tiles[y*m.w+x]);
+      if (state.map==='overworld') {
+        // Dessus du Center – croix stylisée
+        const {x,y}=MAPS.overworld.door; // porte
+        ctx.fillStyle = '#f87171'; // rouge clair
+        ctx.fillRect((x-1)*TILE, (y-2)*TILE, TILE*2, 4); // bandeau
+        ctx.fillStyle = '#fff';
+        ctx.fillRect((x-0.5)*TILE, (y-3)*TILE+2, 4, 8);
+        ctx.fillRect((x-1)*TILE, (y-2)*TILE, 8, 4);
+        // Écriteau "Blueshield"
+        ctx.fillStyle = '#0b1220';
+        ctx.fillRect((x-2)*TILE, (y+1)*TILE, TILE*3, 10);
+        ctx.fillStyle = '#fff';
+        ctx.font = '8px monospace';
+        ctx.fillText('BLUESHIELD', (x-1.8)*TILE, (y+1)*TILE+8);
+      }
+    }
+
+    // =============================
+    // JOUEUR & PNJ
+    // =============================
+    function rectsOverlap(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
+
+    function drawPlayer(){
+      const p=state.player;
+      // Ombre
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(p.x+8,p.y+14,6,3,0,0,Math.PI*2); ctx.fill();
+      // Corps pixel
+      ctx.fillStyle = p.color; ctx.fillRect(p.x+5, p.y+6, 6, 8);
+      // Tête
+      ctx.fillStyle = '#f5d0a5'; ctx.fillRect(p.x+5, p.y+2, 6, 6);
+      // Yeux
+      ctx.fillStyle = '#111'; ctx.fillRect(p.x+6, p.y+4, 1, 1); ctx.fillRect(p.x+9, p.y+4, 1, 1);
+    }
+
+    function drawNPC(n){
+      ctx.fillStyle = '#111'; ctx.fillRect(n.x+5, n.y+14, 6, 2); // ombre
+      ctx.fillStyle = '#60a5fa'; ctx.fillRect(n.x+4, n.y+7, 8, 8); // torse
+      ctx.fillStyle = '#f5d0a5'; ctx.fillRect(n.x+4, n.y+2, 8, 6); // tête
+    }
+
+    function collideMap(nx,ny){
+      const m = MAPS[state.map];
+      const rect = { x:nx+2, y:ny+8, w:12, h:8 };// hitbox
+      // collisions tuiles solides
+      for(let ty=Math.floor(rect.y/TILE); ty<=Math.floor((rect.y+rect.h-1)/TILE); ty++){
+        for(let tx=Math.floor(rect.x/TILE); tx<=Math.floor((rect.x+rect.w-1)/TILE); tx++){
+          if (tx<0||ty<0||tx>=m.w||ty>=m.h) return true;
+          const t = m.tiles[ty*m.w+tx];
+          if (m.solids.includes(t)) return true;
+        }
+      }
+      return false;
+    }
+
+    function tryEnterOrExit(){
+      const m = MAPS[state.map];
+      const door = m.door; if(!door) return;
+      const px = Math.floor((state.player.x+8)/TILE), py = Math.floor((state.player.y+14)/TILE);
+      if (state.map==='overworld'){
+        if (px===door.x && py===door.y-1){ // devant la porte
+          // Entrer dans le center
+          state.map='center';
+          state.player.x = 8*TILE; state.player.y = (MAPS.center.h-2)*TILE;
+          say(["Vous entrez dans le Blueshield Center."], 1000);
+        }
+      } else if (state.map==='center'){
+        if (px===door.x && py===door.y){ // sur la porte de sortie
+          state.map='overworld';
+          const d=MAPS.overworld.door; state.player.x=(d.x)*TILE; state.player.y=(d.y-1)*TILE;
+          say(["Vous sortez du Center."], 800);
+        }
+      }
+    }
+
+    function talkToNPC(){
+      const list = npcs[state.map]||[];
+      const pRect = { x: state.player.x+2,y:state.player.y+8,w:12,h:8 };
+      for(const n of list){
+        const nRect = { x:n.x,y:n.y,w:n.w,h:n.h };
+        const near = Math.hypot((state.player.x-n.x),(state.player.y-n.y))<20;
+        if (near && rectsOverlap({x:pRect.x-4,y:pRect.y-4,w:pRect.w+8,h:pRect.h+8}, nRect)){
+          if (n.isShop){ openShop(); return; }
+          say(n.talk);
+          return;
+        }
+      }
+      // Si aucun PNJ proche, tenter porte
+      tryEnterOrExit();
+    }
+
+    // =============================
+    // DIALOGUES
+    // =============================
+    const dialogEl = document.getElementById('dialog');
+    const dialogTextEl = document.getElementById('dialogText');
+    function say(lines, autoCloseMs){
+      state.dialog = { lines: Array.isArray(lines)?lines:[String(lines)], i:0 };
+      dialogTextEl.textContent = state.dialog.lines[0];
+      dialogEl.classList.remove('hidden');
+      if (autoCloseMs){ setTimeout(closeDialog, autoCloseMs); }
+    }
+    function nextLine(){ if(!state.dialog) return; state.dialog.i++; if(state.dialog.i>=state.dialog.lines.length){ closeDialog(); } else { dialogTextEl.textContent = state.dialog.lines[state.dialog.i]; } }
+    function closeDialog(){ dialogEl.classList.add('hidden'); state.dialog=null; }
+
+    dialogEl.addEventListener('click', nextLine);
+
+    // =============================
+    // BOUTIQUE
+    // =============================
+    const shopEl = document.getElementById('shop');
+    const unitPriceEl = document.getElementById('unitPrice');
+    const totalPriceEl = document.getElementById('totalPrice');
+    const qtyEl = document.getElementById('qty');
+    unitPriceEl.textContent = PRICE_EUR.toFixed(2) + ' ' + CURRENCY;
+    function updateTotal(){ const q = Math.max(1, parseInt(qtyEl.value||'1',10)); totalPriceEl.textContent = (q*PRICE_EUR).toFixed(2)+' '+CURRENCY; }
+    qtyEl.addEventListener('input', updateTotal); updateTotal();
+
+    function openShop(){ shopEl.classList.remove('hidden'); updateTotal(); }
+    function closeShop(){ shopEl.classList.add('hidden'); }
+    document.getElementById('closeShop').addEventListener('click', closeShop);
+
+    document.getElementById('buy').addEventListener('click', ()=>{
+      const q = Math.max(1, parseInt(qtyEl.value||'1',10));
+      const save = loadSave()||{};
+      const name = encodeURIComponent(save.name||state.player.name||'Client');
+      if (CHECKOUT_URL){
+        // Redirige vers votre page de paiement (ajoutez vos paramètres si besoin)
+        const url = CHECKOUT_URL + q + `&client=${name}`;
+        window.location.href = url;
+      } else {
+        // Fallback mailto
+        const subject = encodeURIComponent(`Commande boîtes Blueshield x${q}`);
+        const body = encodeURIComponent(`Bonjour,\n\nJe souhaite commander ${q} boîte(s) Blueshield.\nNom du personnage: ${save.name||state.player.name}\n\nMerci !`);
+        window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+      }
+    });
+
+    // =============================
+    // COMMANDES
+    // =============================
+    const keys = new Set();
+    const KEYMAP = { 'ArrowUp':'up','ArrowDown':'down','ArrowLeft':'left','ArrowRight':'right', 'w':'up','z':'up','s':'down','a':'left','q':'left','d':'right','Enter':'action',' ':'action','Escape':'menu' };
+
+    window.addEventListener('keydown', e=>{ const k = KEYMAP[e.key]; if(k){ e.preventDefault(); keys.add(k);} });
+    window.addEventListener('keyup', e=>{ const k = KEYMAP[e.key]; if(k){ e.preventDefault(); keys.delete(k);} });
+
+    document.getElementById('btnInteract').addEventListener('click', ()=>{ keys.add('action'); setTimeout(()=>keys.delete('action'), 50); });
+    document.getElementById('btnMenu').addEventListener('click', ()=>{ openMenu(); });
+
+    // Touch UI
+    const touchEl = document.getElementById('touch');
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints>0;
+    if (isTouch) touchEl.classList.remove('hidden');
+    function bindHold(sel, k){ const b=touchEl.querySelector(sel); if(!b) return; let down=false; b.addEventListener('touchstart', e=>{ e.preventDefault(); down=true; keys.add(k); }); b.addEventListener('touchend', e=>{ e.preventDefault(); down=false; keys.delete(k); }); }
+    bindHold('.up','up'); bindHold('.down','down'); bindHold('.left','left'); bindHold('.right','right');
+    touchEl.querySelector('.a').addEventListener('touchstart', e=>{ e.preventDefault(); keys.add('action'); setTimeout(()=>keys.delete('action'), 80); });
+    touchEl.querySelector('.m').addEventListener('touchstart', e=>{ e.preventDefault(); openMenu(); });
+
+    // =============================
+    // BOUCLE DE JEU
+    // =============================
+    function step(){
+      // Mouvements
+      const p = state.player;
+      if (!state.dialog && shopEl.classList.contains('hidden') && document.getElementById('menu').classList.contains('hidden') && document.getElementById('signup').classList.contains('hidden')){
+        let vx=0, vy=0; if(keys.has('up')) vy-=1; if(keys.has('down')) vy+=1; if(keys.has('left')) vx-=1; if(keys.has('right')) vx+=1;
+        if (vx||vy){ const len=Math.hypot(vx,vy); vx/=len; vy/=len; const nx=p.x+vx*p.spd, ny=p.y+vy*p.spd; if(!collideMap(nx, p.y)) p.x=nx; if(!collideMap(p.x, ny)) p.y=ny; }
+        if (keys.has('action')){ keys.delete('action'); if (state.dialog) nextLine(); else talkToNPC(); }
+      }
+
+      // Rendu
+      ctx.clearRect(0,0,W,H);
+      const m = MAPS[state.map]; drawMap(m);
+      // PNJ
+      for(const n of (npcs[state.map]||[])) drawNPC(n);
+      // Joueur
+      drawPlayer();
+
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+
+    // =============================
+    // INSCRIPTION / MENU / SAUVEGARDE
+    // =============================
+    const signupEl = document.getElementById('signup');
+    const menuEl = document.getElementById('menu');
+    const playerBadge = document.getElementById('playerBadge');
+
+    const COLORS = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#a855f7','#14b8a6','#eab308','#f97316','#64748b'];
+
+    function renderColorChoices(root, current){
+      root.innerHTML='';
+      COLORS.forEach(c=>{
+        const b=document.createElement('button'); b.type='button'; b.className='swatch'+(c===current?' active':''); b.style.background=c; b.addEventListener('click',()=>{
+          root.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active')); b.classList.add('active'); root.dataset.value=c; });
+        root.appendChild(b);
+      });
+      root.dataset.value = current || COLORS[0];
+    }
+
+    const colorChoices = document.getElementById('colorChoices');
+    const optColors = document.getElementById('optColors');
+    renderColorChoices(colorChoices, COLORS[0]);
+
+    function openSignup(){
+      signupEl.classList.remove('hidden');
+      document.getElementById('name').focus();
+    }
+
+    function closeSignup(){ signupEl.classList.add('hidden'); }
+
+    function openMenu(){
+      document.getElementById('optName').value = state.player.name;
+      renderColorChoices(optColors, state.player.color);
+      menuEl.classList.remove('hidden');
+    }
+    function closeMenu(){ menuEl.classList.add('hidden'); }
+
+    document.getElementById('create').addEventListener('click', ()=>{
+      const name = (document.getElementById('name').value||'Héro·ïne').trim();
+      const color = colorChoices.dataset.value || COLORS[0];
+      state.player.name = name; state.player.color = color;
+      playerBadge.textContent = name + ' — ' + 'Blueshield Town';
+      saveSave({ name, color, map: state.map, x: state.player.x, y: state.player.y });
+      closeSignup();
+      say([`Bienvenue, ${name}!`, "Explorez la ville et rendez-vous au Blueshield Center."], 1600);
+    });
+
+    document.getElementById('saveOpts').addEventListener('click', ()=>{
+      const name = (document.getElementById('optName').value||'Héro·ïne').trim();
+      const color = optColors.dataset.value || state.player.color;
+      state.player.name = name; state.player.color = color;
+      playerBadge.textContent = name + ' — ' + (state.map==='overworld'?'Blueshield Town':'Center');
+      const s = loadSave()||{}; saveSave({ ...s, name, color, map: state.map, x: state.player.x, y: state.player.y });
+      say('Options enregistrées.', 900);
+      closeMenu();
+    });
+
+    document.getElementById('closeMenu').addEventListener('click', closeMenu);
+
+    document.getElementById('exportSave').addEventListener('click', ()=>{
+      const s = loadSave()||{ name: state.player.name, color: state.player.color, map: state.map, x: state.player.x, y: state.player.y };
+      const blob = new Blob([JSON.stringify(s,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='blueshield_save.json'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('importFile').addEventListener('change', (e)=>{
+      const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const s=JSON.parse(r.result); if(s.name) state.player.name=s.name; if(s.color) state.player.color=s.color; if(s.map) state.map=s.map; if(s.x) state.player.x=s.x; if(s.y) state.player.y=s.y; playerBadge.textContent = state.player.name + ' — ' + (state.map==='overworld'?'Blueshield Town':'Center'); saveSave(s); say('Sauvegarde importée.', 1000); } catch(err){ alert('Fichier invalide'); } }; r.readAsText(f);
+    });
+
+    document.getElementById('reset').addEventListener('click', ()=>{
+      if (confirm('Réinitialiser la partie ?')){ localStorage.removeItem(SAVE_KEY); location.reload(); }
+    });
+
+    // Charger sauvegarde ou montrer inscription
+    (function init(){
+      const s = loadSave();
+      if (s && s.name){ state.player.name=s.name; state.player.color=s.color||state.player.color; state.map=s.map||state.map; state.player.x=s.x||state.player.x; state.player.y=s.y||state.player.y; playerBadge.textContent = s.name + ' — ' + (state.map==='overworld'?'Blueshield Town':'Center'); }
+      else { openSignup(); }
+    })();
+
+    // Fermer fenêtres avec Échap
+    window.addEventListener('keydown', (e)=>{
+      if (e.key==='Escape'){
+        if (!menuEl.classList.contains('hidden')) closeMenu();
+        else if (!shopEl.classList.contains('hidden')) closeShop();
+        else if (!dialogEl.classList.contains('hidden')) closeDialog();
+        else openMenu();
+      }
+      if (e.key==='Enter' && !shopEl.classList.contains('hidden')){ /* valider shop via Entrée */ document.getElementById('buy').click(); }
+    });
+  </script>
+</body>
+</html>
